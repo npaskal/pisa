@@ -8,14 +8,27 @@
 #         sboeser@physik.uni-bonn.de
 
 from distutils.core import setup, Extension
+from distutils.command.build import build as _build
+
+#Define custom build order, so that the python interface module
+#created by SWIG is staged in build_py.
+class build(_build):
+    # different order: build_ext *before* build_py
+    sub_commands = [('build_ext',     _build.has_ext_modules),
+                    ('build_py',      _build.has_pure_modules),
+                    ('build_clib',    _build.has_c_libraries),
+                    ('build_scripts', _build.has_scripts),
+                   ]
+
 
 setup(
   name='pisa',
-  version='1.0',
+  version='2.0',
   description='PINGU Simulation and Analysis',
   author='Sebastian Boeser',
-  author_email='sboeser@physik.uni-bonn.de',
+  author_email='sboeser@uni-mainz.de',
   url='http://github.com/sboeser/pisa',
+  cmdclass = {'build': build },
   packages=['pisa',
             'pisa.flux',
             'pisa.oscillations',
@@ -24,6 +37,8 @@ setup(
             'pisa.aeff',
             'pisa.reco',
             'pisa.pid',
+            'pisa.analysis',
+            'pisa.analysis.LLR',
             'pisa.utils',
             'pisa.resources'],
   scripts=['examples/default_chain.sh',
@@ -33,6 +48,8 @@ setup(
            'pisa/aeff/Aeff.py',
            'pisa/reco/Reco.py',
            'pisa/pid/PID.py',
+           'pisa/analysis/TemplateMaker.py',
+           'pisa/analysis/LLR/LLROptimizerAnalysis.py'
            ],
   ext_package='pisa.oscillations.prob3',
   ext_modules=[Extension('_BargerPropagator',
@@ -42,10 +59,12 @@ setup(
                     'pisa/oscillations/prob3/mosc.c',
                     'pisa/oscillations/prob3/mosc3.c'],
                     swig_opts=['-c++'])],
-  package_data={'pisa.resources': ['aeff/*.json',
-                                   'aeff/*.dat',
+  package_data={'pisa.resources': ['logging.json',
+                                   'aeff/*.json',
+                                   'aeff/V15/cuts_V3/*.dat',
                                    'pid/*.json',
                                    'flux/*.d',
+                                   'settings/*.json',
                                    'oscillations/*.hdf5',
                                    'oscillations/*.dat',
                                    'events/*.hdf5']}
